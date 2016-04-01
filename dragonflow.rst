@@ -1,0 +1,1 @@
+gem install redis 无法连接
