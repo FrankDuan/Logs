@@ -129,5 +129,7 @@ git remote set-url mine  https://FrankDuan:Linux365@github.com/FrankDuan/df_code
 
 git  your branch and "origin/master" hae diverged, and have x and x different commits each
 
-
-
+git pull 时出现non-fast-forward error
+git pull mine master:private
+From https://github.com/frankduan/dragonflow
+ ! [rejected]        master     -> private  (non-fast-forward)
