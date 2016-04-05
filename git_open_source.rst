@@ -133,3 +133,16 @@ git pull 时出现non-fast-forward error
 git pull mine master:private
 From https://github.com/frankduan/dragonflow
  ! [rejected]        master     -> private  (non-fast-forward)
+ 
+ 
+ Beyond Compare 3
+Licensed to: HUAWEI TECHNOLOGIES CO.,LTD.
+Quantity: 50 users
+Serial number: 1536-0694
+License type: Pro Edition for Windows
+
+--- BEGIN LICENSE KEY ---
+7Ga+O4EDJshK97jKYYGsxL37J3tVaCBjygk4tKLCnZKwSUPp1ipbKzRiO
+9oPSurXQQZ7Mpeo5neTXJESU0dvCjQDKG8ugD66N+hr-vy+KZiaHQ+wKW
+BaloIJlucyiDIGuWTzWXjDlZf6Q4BlB3ubm5cLSk0QrKCtLYMOBhh42Z2
+--- END LICENSE KEY -----
