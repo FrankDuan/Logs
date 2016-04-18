@@ -1,4 +1,11 @@
 
+===================
+open source and git
+===================
+
+git
+===================
+
 osx快捷键：
 Command ⌘  Option ⌥  Caps Lock ⇪ Shift ⇧ Control ⌃
 
@@ -7,7 +14,10 @@ Command ⌘  Option ⌥  Caps Lock ⇪ Shift ⇧ Control ⌃
 http password:
 YXpejAAawZJkIk50u3rQ7hPF17l82wsSKbz9F1Y8nw
 
+
+
 老是连接不上gerrit原因是需要执行如下操作
+-----------------------------------------
 
 git remote add gerrit https://duankebo@review.openstack.org:443/openstack/dragonflow.git
 
@@ -110,8 +120,15 @@ local variable 'run_subunit_content' referenced before assignment
 3. git remote add gerrit https://duankebo:YXpejAAawZJkIk50u3rQ7hPF17l82wsSKbz9F1Y8nw@review.openstack.org/openstack/dragonflow.git
 
 开发环境的建立（ubuntu）
-tox的安装，需要先删除ubuntu自带的tox，apt-get remove python-tox
-需要升级pip, pip install -U pip
+----------------------
+
+* tox的安装，需要先删除ubuntu自带的tox，apt-get remove python-tox
+
+* 需要升级pip, pip install -U pip
+
+* git config --global user.name "John Doe"
+
+* git config --global user.email johndoe@example.com
 
 从gerrit上取补丁然后更新的方法
 1. 先拷贝review页面上的git fetch …的地址</p>
