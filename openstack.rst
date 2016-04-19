@@ -14,14 +14,28 @@ ebay
 
 * paypal主要还在用vmware
 
+devstack
+============
+
+mysql
+--------------
+
+* mysql -u root -p
+
+* stackdb
+
+* use neutron
+
 
 Frequently used commands
 ========================
 
 create network
 ---------------
-neutron net-create net1
-neutron subnet-create net1 192.168.12.0/24
+
+* neutron net-create net1
+
+* neutron subnet-create net1 192.168.12.0/24
 
 
 create vm
