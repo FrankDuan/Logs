@@ -10,3 +10,22 @@ redis-trib.rb create --replicas 1 10.249.28.249:4001 10.249.28.249:4002 10.249.2
 
 1. gem install redis
 2. add sudo before the ruby command
+
+devstack config
+^^^^^^^^^^^^^^^^^^^^
+DF_SELECTIVE_TOPO_DIST=True
+DF_REDIS_PUBSUB=True
+enable_plugin dragonflow http://git.openstack.org/openstack/dragonflow
+#enable_service df-etcd
+#enable_service df-etcd-server
+enable_service df-redis
+enable_service df-redis-server
+enable_service df-redis-publisher-service
+enable_service df-controller
+enable_service df-ext-services
+
+disable_service n-net
+enable_service q-svc
+enable_service q-l3
+disable_service heat
+disable_service tempest
