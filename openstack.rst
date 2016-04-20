@@ -41,3 +41,17 @@ create network
 create vm
 ---------------
 nova boot --image cirros-0.3.4-x86_64-uec --flavor 1 --nic net-id=4b12d425-4fe2-47ad-8ffe-a95522d8f12c vm1
+
+
+Neutron Inside
+================
+
+L3 agent
+----------------
+
+L3RpcCallback
+^^^^^^^^^^^^^^^
+defines Rpc that will be called by L3 Plugin?
+
+
+
