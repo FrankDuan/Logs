@@ -54,4 +54,10 @@ L3RpcCallback
 defines Rpc that will be called by L3 Plugin?
 
 
+python
+================
+
+debug python 
+^^^^^^^^^^^^^^^^^^^^
+/usr/bin/python -m pdb /usr/local/bin/neutron-server --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini
 
