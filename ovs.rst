@@ -23,6 +23,37 @@ essentially caching per transport connection forwarding decisions. In later vers
 has two layers of caching: a microflow cache and a secondary layer, called a megaflow 
 cache, which caches forwarding decisions for traffic aggregates beyond individual connections. 
 
+microflow cache
+^^^^^^^^^^^^^^^^^
+ a single cache entry exact matches with all the packet header fields supported
+by OpenFlow. This allowed radical simplification, by implementing the kernel module as a simple hash table
+rather than as a complicated, generic packet classifier, supporting arbitrary fields and masking. In this design,
+cache entries are extremely fine-grained and match at most packets of a single transport connection: even for a
+single transport connection, a change in network path and hence in IP TTL field would result in a miss, and would
+divert a packet to userspace, which consulted the actual OpenFlow flow table to decide how to forward it.
+
+Megaflow Caching
+^^^^^^^^^^^^^^^^^^^
+While the microflow cache works well with most traffic patterns, it suffers serious performance degradation when
+faced with large numbers of short lived connections. In this case, many packets miss the cache, and must not only
+cross the kernel-userspace boundary, but also execute a long series of expensive packet classifications.
+
+The megaflow cache is a single flow lookup table that supports generic matching, i.e., it supports
+caching forwarding decisions for larger aggregates of traffic than connections. While it more closely resembles
+a generic OpenFlow table than the microflow cache does, due to its support for arbitrary packet field matching, it
+is still strictly simpler and lighter in runtime for two primary reasons. First, it does not have priorities, which
+speeds up packet classification: the in-kernel tuple space search implementation can terminate as soon as it finds
+any match, instead of continuing to look for a higherpriority match until all the mask-specific hash tables are
+inspected. (To avoid ambiguity, userspace installs only disjoint megaflows, those whose matches do not overlap.)
+Second, there is only one megaflow classifier, instead of a pipeline of them, so userspace installs megaflow entries 
+that collapse together the behavior of all relevant OpenFlow tables.
+
+Open vSwitch addresses the costs of megaflows by retaining the microflow cache as a first-level cache, consulted before the megaflow cache. This cache is a hash table that maps from a microflow to its matching megaflow.
+Thus, after the first packet in a microflow passes through the kernel megaflow table, requiring a search of the kernel
+classifier, this exact-match cache allows subsequent packets in the same microflow to get quickly directed to the
+appropriate megaflow. This reduces the cost of megaflows from per-packet to per-microflow. The exact-match cache
+is a true cache in that its activity is not visible to userspace, other than through its effects on performance.
+
 Packet Classification
 ---------------------
 
