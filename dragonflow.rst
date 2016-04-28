@@ -41,6 +41,7 @@ enable_service q-svc
 enable_service q-l3
 disable_service heat
 disable_service tempest
+NEUTRON_CREATE_INITIAL_NETWORKS=False
 
 CI devstack config
 ^^^^^^^^^^^^^^^^^^^^
