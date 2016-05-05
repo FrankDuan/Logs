@@ -76,3 +76,33 @@ the higher priority. As the controller continues to add more flows with new form
 match, the classifier similarly expands to include a hash table for each unique match, 
 and a search of the classifier must look in every hash table.
 
+network virtualization
+=========================
+
+virtio
+-----------------
++---------+------+--------+----------+--+
+|         +------+        +----------+  |
+| user    |      |        |          |  |
+| space   |      |        |  guest   |  |
+|         |      |        |          |  |
+|    +----+ qemu |        | +-+------+  |
+|    |    |      |        | | virtio |  |
+|    |    |      |        | | driver |  |
+|    |    +------+        +-+---++---+  |
+|    |                          |       |
+|    |       ^                  |       |
+|    v       |                  v       |
+|            |                          |
++-+-----+-----------------+--+-------+--+
+| |tap  |    +------------+ kvm.ko   |  |
+| +-----+                 +--+-------+  |
+|                kernel                 |
++---------------------------------------+
+
+图中描述了的io路径:guest发出中断信号退出kvm，从kvm退出到用户空间的qemu进程。然后由qemu开始对tap设备进行读写。 可以看到这里从用户态进入内核，再从内核切换到用户态，进行了2次切换。
+
+
+
+
+
