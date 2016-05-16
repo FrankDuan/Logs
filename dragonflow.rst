@@ -45,29 +45,47 @@ NEUTRON_CREATE_INITIAL_NETWORKS=False
 
 CI devstack config
 ^^^^^^^^^^^^^^^^^^^^
-[df]
-remote_db_ip 10.220.2.75
-remote_db_port 4001  
-remote_db_hosts 10.220.2.75:4001 
-nb_db_class dragonflow.db.drivers.etcd_db_driver.EtcdDbDriver
-local_ip 10.220.2.75            
-tunnel_type geneve         
-apps_list l2_app.L2App,l3_proactive_app.L3ProactiveApp,dhcp_app.DHCPApp,dnat_app.DNATApp,sg_app.SGApp  
-monitor_table_poll_time 30               
-enable_df_pub_sub True              
-pub_sub_use_multiproc True    
-publishers_ips 127.0.0.1
-enable_selective_topology_distribution True 
-pub_sub_driver zmq_pubsub_driver 
-pub_sub_multiproc_driver zmq_pubsub_multiproc_driver 
+* [df]
 
-[df_dnat_app]
-external_network_bridge br-ex   
-int_peer_patch_port patch-ex     
-ex_peer_patch_port patch-int 
+* remote_db_ip 10.220.2.75
 
-[df_l2_app] 
-l2_responder True  
+* remote_db_port 4001  
+
+* remote_db_hosts 10.220.2.75:4001 
+
+* nb_db_class dragonflow.db.drivers.etcd_db_driver.EtcdDbDriver
+
+* local_ip 10.220.2.75            
+
+* tunnel_type geneve         
+
+* apps_list l2_app.L2App,l3_proactive_app.L3ProactiveApp,dhcp_app.DHCPApp,dnat_app.DNATApp,sg_app.SGApp  
+
+* monitor_table_poll_time 30               
+
+* enable_df_pub_sub True              
+
+* pub_sub_use_multiproc True    
+
+* publishers_ips 127.0.0.1
+
+* enable_selective_topology_distribution True 
+
+* pub_sub_driver zmq_pubsub_driver 
+
+* pub_sub_multiproc_driver zmq_pubsub_multiproc_driver 
+
+* [df_dnat_app]
+
+* external_network_bridge br-ex   
+
+* int_peer_patch_port patch-ex     
+
+* ex_peer_patch_port patch-int 
+
+* [df_l2_app] 
+
+* l2_responder True  
 
 OVN
 =========================
