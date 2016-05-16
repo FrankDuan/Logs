@@ -25,6 +25,22 @@ redis-trib.rb create --replicas 1 10.249.28.249:4001 10.249.28.249:4002 10.249.2
 
 devstack config
 ^^^^^^^^^^^^^^^^^^^^
+[[local|localrc]]
+NO_UPDATE_REPOS=True
+RECLONE=no
+
+DATABASE_PASSWORD=stackdb
+RABBIT_PASSWORD=huawei
+SERVICE_PASSWORD=huawei
+SERVICE_TOKEN=huawei
+ADMIN_PASSWORD=huawei
+
+SWIFT_HASH=66a3d6b56c1f479c8b4e70ab5c2000f5
+SWIFT_REPLICAS=1
+SWIFT_DATA_DIR=$DEST/data
+
+Q_ENABLE_DRAGONFLOW_LOCAL_CONTROLLER=True
+
 DF_SELECTIVE_TOPO_DIST=True
 DF_REDIS_PUBSUB=True
 enable_plugin dragonflow http://git.openstack.org/openstack/dragonflow
