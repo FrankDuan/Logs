@@ -36,7 +36,8 @@ create network
 * neutron net-create net1
 
 * neutron subnet-create net1 192.168.12.0/24
-
+* neutron router-create router1
+* neutron router-interface-add router1 b9802c7c-0b30-47ee-9c7c-a0ecf60def01
 
 create vm
 ---------------
