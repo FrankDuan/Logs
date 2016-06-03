@@ -43,7 +43,7 @@ create network
 * neutron net-create ext-net --router:external True
 * neutron subnet-create ext-net --name ext-subnet --allocation-pool start=203.0.113.101,end=203.0.113.200 \
   --disable-dhcp --gateway 203.0.113.1 203.0.113.0/24
-
+* neutron router-gateway-set --disable-snat router1 ext-net
 
 create vm
 ---------------
