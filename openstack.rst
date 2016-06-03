@@ -35,10 +35,15 @@ create network
 
 * neutron net-create net1
 
-* neutron subnet-create net1 192.168.12.0/24
+* neutron subnet-create net1 192.168.12.0/24 --name subnet1
 * neutron router-create router1
-* neutron router-interface-add router1 b9802c7c-0b30-47ee-9c7c-a0ecf60def01
+* neutron router-interface-add router1 subnet1
 * neutron router-update router1 --route destination=10.10.10.0/24,nexthop=192.168.12.254
+
+* neutron net-create ext-net --router:external True
+* neutron subnet-create ext-net --name ext-subnet --allocation-pool start=203.0.113.101,end=203.0.113.200 \
+  --disable-dhcp --gateway 203.0.113.1 203.0.113.0/24
+
 
 create vm
 ---------------
