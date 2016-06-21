@@ -19,3 +19,9 @@ Integration Writing:
   b) workd choice
   c) vocabulary
   d) use of grammar
+Tips:
+
+1. Practise paraphrasing, which is expressing the same idea in different ways.
+2. Build your vocabulary. Practice using synonyms when you write.
+3. Pratice identifying main points. Listen to recorded lestures and write down the main points.
+4. Read two articles that are in the same topic and write summary of each. Explain the ways they are similar and the ways they are different.
