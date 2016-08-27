@@ -151,3 +151,8 @@ git pull mine master:private
 From https://github.com/frankduan/dragonflow
  ! [rejected]        master     -> private  (non-fast-forward)
  
+git: diff between file in local repo and origin
+
+If [remote-path] and [local-path] are the same, you can do
+
+git diff origin/master -- [local-path]
