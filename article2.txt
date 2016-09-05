@@ -1,0 +1,23 @@
+Patent ID	83624959	Patent Ref	83571578CN01
+Patent Status	Published	Review Status	Open
+Filed Date	31 Oct 2012	Granted Date	
+Patent No		Publication No	CN 103795632 A
+Responsible Manager	Xianhui Song 00191958	Case Manager	Yinghong Nie 00388538
+Application No	201210427670.2		
+Application Title	一种数据报文传输方法及相关设备、系统
+
+Patent ID	83818274	Patent Ref	83571578EP02
+Patent Status	Granted	Review Status	Open
+Filed Date	24 Sep 2013	Granted Date	14 Sep 2016
+Patent No	EP2741463	Publication No	EP2741463
+Responsible Manager	Xianhui Song 00191958	Case Manager	Yinghong Nie 00388538
+Application No	EP13185759.1		
+Application Title	DATA PACKET TRANSMISSION METHOD AND RELATED DEVICE AND SYSTEM	
+
+Patent ID	83818292	Patent Ref	83571578US03
+Patent Status	Allowed	Review Status	Open
+Filed Date	16 Sep 2013	Granted Date	
+Patent No		Publication No	US20140122732
+Responsible Manager	Xianhui Song 00191958	Case Manager	Yinghong Nie 00388538
+Application No	14028183		
+Application Title	DATA PACKET TRANSMISSION METHOD AND RELATED DEVICE AND SYSTEM	
