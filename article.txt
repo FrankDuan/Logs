@@ -1,0 +1,53 @@
+Patent ID	83964834	
+Patent Ref	83950695CN01
+Patent Status	Published	
+Review Status	Open
+Filed Date	03 Jan 2014	
+Granted Date	
+Patent No		
+Publication No	CN 104767676 A
+Responsible Manager	Shun Cheng 00272638	
+Case Manager	Yinghong Nie 00388538
+Application No	201410003423.9		
+Application Title	SDN 网络中的数据报文转发方法和系统	
+
+
+
+Patent ID	85136332	
+Patent Ref	84487796PCT03
+Patent Status	Application	
+Review Status	Open
+Filed Date	23 Aug 2016	
+Granted Date	
+Patent No		
+Publication No	
+Responsible Manager	Shun Cheng 00272638	
+Case Manager	Yinghong Nie 00388538
+Application No	PCT/CN2016/096372		
+Application Title	一种数据传输方法、虚拟网络管理装置及数据传输系统		
+ 
+ 	
+Patent ID	84536458	Patent Ref	84488733CN01
+Patent Status	Application	Review Status	Open
+Filed Date	03 Aug 2015	Granted Date	
+Patent No		Publication No	
+Responsible Manager	Shun Cheng 00272638	Case Manager	Yinghong Nie 00388538
+Application No	201510480837.5		
+Application Title	数据分发方法及系统	
+
+
+Invention ID	84730896	
+Invention Ref	
+Invention Status	Filed	
+Review Status	Open
+Received Date	11 Nov 2015	
+Review Date	14 Nov 2015
+Patent Committee	090124 Software Technical Research (cloud)	
+Evaluation Date	22 Jul 2016
+Responsible Manager	Shun Cheng 00272638	
+Case Manager	Yinghong Nie 00388538
+Invention Title	一种新的跨DC大二层方法和装置		
+
+
+
+
