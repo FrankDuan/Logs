@@ -1,0 +1,3 @@
+tox ut
+1. enter virtual environment
+. ./tox/py27/bin/activate
