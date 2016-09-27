@@ -1,0 +1,706 @@
+diff -ruN -x '*.pyc' /opt/stack/dragonflow/dragonflow/controller/df_db_notifier.py /sdn/code/dragonflow/dragonflow/controller/df_db_notifier.py
+--- /opt/stack/dragonflow/dragonflow/controller/df_db_notifier.py	2016-09-27 11:46:02.707869000 +0800
++++ /sdn/code/dragonflow/dragonflow/controller/df_db_notifier.py	2016-09-27 16:38:18.769378241 +0800
+@@ -65,47 +65,30 @@
+                        compute node, and is removed from db
+         """
+ 
+-    def add_new_router_port(self, router, router_port, local_network_id):
+-        """add  new port to router hook callback
++    def logical_switch_deleted(self, lswitch):
++        """logical switch deleted hook callback
+ 
+ 
+-        param router:      the router that owns the new port
+-        param router_port: the new port
+-        param local_network_id: the id of the local network that the added port
+-        belongs to
++        :param lswitch_id: logical switch id of the deleted switch
+         """
+ 
+-    def remove_router_port(self, router_port, local_network_id):
+-        """delete a  router port hook callback
+-
+-
+-        param router_port: the port to be deleted
+-        param local_network_id: the id of the local network that the port
+-        belongs to
+-        """
++    def logical_switch_updated(self, lswitch):
++        """logical switch updated hook callback
+ 
+-    def add_router_route(self, router, route):
+-        """add  new route to router callback
+-        param router: the router that the route to be added to
+-        param route:  the new route to be added
+-        """
+ 
+-    def remove_router_route(self, router, route):
+-        """delete route from a router callback
+-        param router: the router that the route to be deleted from
+-        param route:  the route to be deleted
++        :param lswitch: logical switch that is updated
+         """
+ 
+-    def logical_switch_deleted(self, lswitch):
+-        """logical switch deleted hook callback
++    def router_updated(self, router):
++        """router updated hook callback
+ 
+ 
+-        :param lswitch_id: logical switch id of the deleted switch
++        :param router: logical router that is updated
+         """
+ 
+-    def logical_switch_updated(self, lswitch):
+-        """logical switch updated hook callback
++    def router_deleted(self, router_id):
++        """router updated hook callback
+ 
+ 
+-        :param lswitch: logical switch that is updated
++        :param router_id: id of router that is deleted
+         """
+diff -ruN -x '*.pyc' /opt/stack/dragonflow/dragonflow/controller/df_local_controller.py /sdn/code/dragonflow/dragonflow/controller/df_local_controller.py
+--- /opt/stack/dragonflow/dragonflow/controller/df_local_controller.py	2016-09-27 11:46:02.707869000 +0800
++++ /sdn/code/dragonflow/dragonflow/controller/df_local_controller.py	2016-09-27 15:28:29.437206316 +0800
+@@ -353,23 +353,11 @@
+         self.open_flow_app.notify_update_bridge_port(lport)
+ 
+     def router_updated(self, lrouter):
+-        old_lrouter = self.db_store.get_router(lrouter.get_id())
+-        if old_lrouter is None:
+-            LOG.info(_LI("Logical Router created = %s") %
+-                     lrouter.__str__())
+-            self._add_new_lrouter(lrouter)
+-            return
+-        self._update_router_interfaces(old_lrouter, lrouter)
+-        self._update_router_attributes(old_lrouter, lrouter)
++        self.open_flow_app.notify_update_router(lrouter)
+         self.db_store.update_router(lrouter.get_id(), lrouter)
+ 
+     def router_deleted(self, lrouter_id):
+-        old_lrouter = self.db_store.get_router(lrouter_id)
+-        if old_lrouter is None:
+-            return
+-        old_router_ports = old_lrouter.get_ports()
+-        for old_port in old_router_ports:
+-            self._delete_router_port(old_port)
++        self.open_flow_app.notify_delete_router(lrouter_id)
+         self.db_store.delete_router(lrouter_id)
+ 
+     def security_group_updated(self, secgroup):
+@@ -448,65 +436,6 @@
+         for router_to_remove in routers_to_remove:
+             self.router_deleted(router_to_remove)
+ 
+-    def _update_router_attributes(self, old_router, new_router):
+-        old_routes = old_router.get_routes()
+-        new_routes = new_router.get_routes()
+-        for new_route in new_routes:
+-            if new_route not in old_routes:
+-                self._add_router_route(new_router, new_route)
+-            else:
+-                old_routes.remove(new_route)
+-        for old_route in old_routes:
+-            self._delete_router_route(new_router, old_route)
+-
+-    def _add_router_route(self, router, route):
+-        LOG.info(_LI("Adding new logical router route = %s"), route)
+-        self.open_flow_app.notify_add_router_route(
+-            router, route)
+-
+-    def _delete_router_route(self, router, route):
+-        LOG.info(_LI("Removing logical router route = %s"), route)
+-        self.open_flow_app.notify_remove_router_route(
+-            router, route)
+-
+-    def _update_router_interfaces(self, old_router, new_router):
+-        new_router_ports = new_router.get_ports()
+-        old_router_ports = old_router.get_ports()
+-        for new_port in new_router_ports:
+-            if new_port not in old_router_ports:
+-                self._add_new_router_port(new_router, new_port)
+-            else:
+-                old_router_ports.remove(new_port)
+-
+-        for old_port in old_router_ports:
+-            self._delete_router_port(old_port)
+-
+-    def _add_new_router_port(self, router, router_port):
+-        LOG.info(_LI("Adding new logical router interface = %s") %
+-                 router_port.__str__())
+-        local_network_id = self.db_store.get_network_id(
+-            router_port.get_lswitch_id()
+-        )
+-        self.open_flow_app.notify_add_router_port(
+-                router, router_port, local_network_id)
+-
+-    def _delete_router_port(self, router_port):
+-        LOG.info(_LI("Removing logical router interface = %s") %
+-                 router_port.__str__())
+-        local_network_id = self.db_store.get_network_id(
+-            router_port.get_lswitch_id()
+-        )
+-        self.open_flow_app.notify_remove_router_port(
+-                router_port, local_network_id)
+-
+-    def _add_new_lrouter(self, lrouter):
+-        for new_port in lrouter.get_ports():
+-            self._add_new_router_port(lrouter, new_port)
+-        routes = lrouter.get_routes()
+-        for route in routes:
+-            self._add_router_route(lrouter, route)
+-        self.db_store.update_router(lrouter.get_id(), lrouter)
+-
+     def read_security_groups(self):
+         secgroups_to_remove = self.db_store.get_security_group_keys()
+ 
+diff -ruN -x '*.pyc' /opt/stack/dragonflow/dragonflow/controller/l3_app.py /sdn/code/dragonflow/dragonflow/controller/l3_app.py
+--- /opt/stack/dragonflow/dragonflow/controller/l3_app.py	2016-09-14 21:04:54.491869000 +0800
++++ /sdn/code/dragonflow/dragonflow/controller/l3_app.py	2016-09-27 19:40:20.778263362 +0800
+@@ -22,7 +22,7 @@
+ from ryu.lib.packet import packet
+ from ryu.ofproto import ether
+ 
+-from dragonflow._i18n import _LE
++from dragonflow._i18n import _LE, _LI
+ from dragonflow.controller.common import arp_responder
+ from dragonflow.controller.common import constants as const
+ from dragonflow.controller.common import icmp_responder
+@@ -45,6 +45,39 @@
+                                   const.PRIORITY_DEFAULT,
+                                   const.EGRESS_TABLE)
+ 
++    def router_updated(self, lrouter):
++        old_lrouter = self.db_store.get_router(lrouter.get_id())
++        if old_lrouter is None:
++            LOG.info(_LI("Logical Router created = %s"), lrouter)
++            self._add_new_lrouter(lrouter)
++            return
++
++        self._update_router_interfaces(old_lrouter, lrouter)
++
++    def router_deleted(self, lrouter_id):
++        old_lrouter = self.db_store.get_router(lrouter_id)
++        if old_lrouter is None:
++            return
++
++        for old_port in old_lrouter.get_ports():
++            self._delete_router_port(old_port)
++
++    def _update_router_interfaces(self, old_router, new_router):
++        new_router_ports = new_router.get_ports()
++        old_router_ports = old_router.get_ports()
++        for new_port in new_router_ports:
++            if new_port not in old_router_ports:
++                self._add_new_router_port(new_router, new_port)
++            else:
++                old_router_ports.remove(new_port)
++
++        for old_port in old_router_ports:
++            self._delete_router_port(old_port)
++
++    def _add_new_lrouter(self, lrouter):
++        for new_port in lrouter.get_ports():
++            self._add_new_router_port(lrouter, new_port)
++
+     def packet_in_handler(self, event):
+         msg = event.msg
+ 
+@@ -135,7 +168,12 @@
+                 data=data)
+         self.get_datapath().send_msg(out)
+ 
+-    def add_router_port(self, router, router_port, local_network_id):
++    def _add_new_router_port(self, router, router_port):
++        LOG.info(_LI("Adding new logical router interface = %s"),
++                 router_port)
++        local_network_id = self.db_store.get_network_id(
++            router_port.get_lswitch_id()
++        )
+         datapath = self.get_datapath()
+         if datapath is None:
+             return
+@@ -266,7 +304,12 @@
+             priority=const.PRIORITY_MEDIUM,
+             match=match)
+ 
+-    def remove_router_port(self, router_port, local_network_id):
++    def _delete_router_port(self, router_port):
++        LOG.info(_LI("Removing logical router interface = %s"),
++                 router_port)
++        local_network_id = self.db_store.get_network_id(
++            router_port.get_lswitch_id()
++        )
+         parser = self.get_datapath().ofproto_parser
+         ofproto = self.get_datapath().ofproto
+         tunnel_key = router_port.get_tunnel_key()
+diff -ruN -x '*.pyc' /opt/stack/dragonflow/dragonflow/controller/l3_proactive_app.py /sdn/code/dragonflow/dragonflow/controller/l3_proactive_app.py
+--- /opt/stack/dragonflow/dragonflow/controller/l3_proactive_app.py	2016-09-27 11:46:02.711869000 +0800
++++ /sdn/code/dragonflow/dragonflow/controller/l3_proactive_app.py	2016-09-27 16:17:22.857228705 +0800
+@@ -39,7 +39,60 @@
+                                   const.PRIORITY_DEFAULT,
+                                   const.EGRESS_TABLE)
+ 
+-    def add_router_port(self, router, router_port, local_network_id):
++    def router_updated(self, lrouter):
++        old_lrouter = self.db_store.get_router(lrouter.get_id())
++        if old_lrouter is None:
++            LOG.info(_LI("Logical Router created = %s"), lrouter)
++            self._add_new_lrouter(lrouter)
++            return
++
++        self._update_router_interfaces(old_lrouter, lrouter)
++        self._update_router_attributes(old_lrouter, lrouter)
++
++    def router_deleted(self, lrouter_id):
++        old_lrouter = self.db_store.get_router(lrouter_id)
++        if old_lrouter is None:
++            return
++
++        for old_port in old_lrouter.get_ports():
++            self._delete_router_port(old_port)
++
++    def _update_router_attributes(self, old_router, new_router):
++        old_routes = old_router.get_routes()
++        new_routes = new_router.get_routes()
++        for new_route in new_routes:
++            if new_route not in old_routes:
++                self._add_router_route(new_router, new_route)
++            else:
++                old_routes.remove(new_route)
++        for old_route in old_routes:
++            self._delete_router_route(new_router, old_route)
++
++    def _update_router_interfaces(self, old_router, new_router):
++        new_router_ports = new_router.get_ports()
++        old_router_ports = old_router.get_ports()
++        for new_port in new_router_ports:
++            if new_port not in old_router_ports:
++                self._add_new_router_port(new_router, new_port)
++            else:
++                old_router_ports.remove(new_port)
++
++        for old_port in old_router_ports:
++            self._delete_router_port(old_port)
++
++    def _add_new_lrouter(self, lrouter):
++        for new_port in lrouter.get_ports():
++            self._add_new_router_port(lrouter, new_port)
++
++        for route in lrouter.get_routes():
++            self._add_router_route(lrouter, route)
++
++    def _add_new_router_port(self, router, router_port):
++        LOG.info(_LI("Adding new logical router interface = %s"),
++                 router_port)
++        local_network_id = self.db_store.get_network_id(
++            router_port.get_lswitch_id()
++        )
+         datapath = self.get_datapath()
+         parser = datapath.ofproto_parser
+         ofproto = datapath.ofproto
+@@ -191,8 +244,7 @@
+                 self._del_from_route_cache(ROUTE_ADDED, router_id, route_dict)
+                 self._add_to_route_cache(ROUTE_TO_ADD, router_id, route_dict)
+ 
+-    def _add_router_route(self, router, route):
+-
++    def _add_route_process(self, router, route):
+         datapath = self.get_datapath()
+         ofproto = self.get_datapath().ofproto
+         parser = datapath.ofproto_parser
+@@ -262,17 +314,17 @@
+                                     ipv6_dst=(dst_network, dst_netmask))
+         return match
+ 
+-    def add_router_route(self, router, route):
+-        LOG.info(_LI('Add extra route %(route)s for router %(router)s') %
++    def _add_router_route(self, router, route):
++        LOG.info(_LI('Add extra route %(route)s for router %(router)s'),
+                  {'route': route, 'router': str(router)})
+ 
+-        added = self._add_router_route(router, route)
++        added = self._add_route_process(router, route)
+         if added:
+             self._add_to_route_cache(ROUTE_ADDED, router, route)
+         else:
+             self._add_to_route_cache(ROUTE_TO_ADD, router, route)
+ 
+-    def _remove_router_route(self, router, route):
++    def _delete_route_process(self, router, route):
+         datapath = self.get_datapath()
+         ofproto = self.get_datapath().ofproto
+         parser = datapath.ofproto_parser
+@@ -306,11 +358,11 @@
+ 
+         return
+ 
+-    def remove_router_route(self, router, route):
++    def _delete_router_route(self, router, route):
+         LOG.debug('Delete extra route %(route)s from router %(router)s' %
+                  {'route': route, 'router': str(router)})
+ 
+-        self._remove_router_route(router, route)
++        self._delete_route_process(router, route)
+         self._del_from_route_cache(ROUTE_ADDED, router.get_id(), route)
+         self._del_from_route_cache(ROUTE_TO_ADD, router.get_id(), route)
+ 
+@@ -376,7 +428,13 @@
+             priority=const.PRIORITY_MEDIUM,
+             match=match)
+ 
+-    def remove_router_port(self, router_port, local_network_id):
++    def _delete_router_port(self, router_port):
++        LOG.info(_LI("Removing logical router interface = %s"),
++                 router_port)
++        local_network_id = self.db_store.get_network_id(
++            router_port.get_lswitch_id()
++        )
++
+         parser = self.get_datapath().ofproto_parser
+         ofproto = self.get_datapath().ofproto
+         tunnel_key = router_port.get_tunnel_key()
+diff -ruN -x '*.pyc' /opt/stack/dragonflow/dragonflow/controller/ryu_base_app.py /sdn/code/dragonflow/dragonflow/controller/ryu_base_app.py
+--- /opt/stack/dragonflow/dragonflow/controller/ryu_base_app.py	2016-09-27 11:46:02.711869000 +0800
++++ /sdn/code/dragonflow/dragonflow/controller/ryu_base_app.py	2016-09-27 16:31:21.907778396 +0800
+@@ -80,6 +80,12 @@
+     def notify_remove_logical_switch(self, lswitch=None):
+         self.dispatcher.dispatch('remove_logical_switch', lswitch=lswitch)
+ 
++    def notify_update_router(self, router=None):
++        self.dispatcher.dispatch('router_updated', router=router)
++
++    def notify_delete_router(self, router_id=None):
++        self.dispatcher.dispatch('router_deleted', router_id=router_id)
++
+     def notify_add_local_port(self, lport=None):
+         self.dispatcher.dispatch('add_local_port', lport=lport)
+ 
+@@ -103,28 +109,6 @@
+     def notify_update_bridge_port(self, lport=None):
+         self.dispatcher.dispatch('update_bridge_port', lport=lport)
+ 
+-    def notify_add_router_port(self, router=None, router_port=None,
+-                               local_network_id=None):
+-        self.dispatcher.dispatch('add_router_port', router=router,
+-                                 router_port=router_port,
+-                                 local_network_id=local_network_id)
+-
+-    def notify_remove_router_port(self,
+-                                  router_port=None, local_network_id=None):
+-        self.dispatcher.dispatch('remove_router_port',
+-                                 router_port=router_port,
+-                                 local_network_id=local_network_id)
+-
+-    def notify_add_router_route(self, router=None, route=None):
+-        self.dispatcher.dispatch('add_router_route',
+-                                 router=router,
+-                                 route=route)
+-
+-    def notify_remove_router_route(self, router=None, route=None):
+-        self.dispatcher.dispatch('remove_router_route',
+-                                 router=router,
+-                                 route=route)
+-
+     def notify_add_security_group_rule(self, secgroup, secgroup_rule):
+         self.dispatcher.dispatch('add_security_group_rule',
+                                  secgroup=secgroup,
+diff -ruN -x '*.pyc' /opt/stack/dragonflow/dragonflow/tests/unit/test_l3_app.py /sdn/code/dragonflow/dragonflow/tests/unit/test_l3_app.py
+--- /opt/stack/dragonflow/dragonflow/tests/unit/test_l3_app.py	1970-01-01 08:00:00.000000000 +0800
++++ /sdn/code/dragonflow/dragonflow/tests/unit/test_l3_app.py	2016-09-27 19:47:29.966843853 +0800
+@@ -0,0 +1,159 @@
++# Copyright (c) 2015 OpenStack Foundation.
++# All Rights Reserved.
++#
++#    Licensed under the Apache License, Version 2.0 (the "License"); you may
++#    not use this file except in compliance with the License. You may obtain
++#    a copy of the License at
++#
++#         http://www.apache.org/licenses/LICENSE-2.0
++#
++#    Unless required by applicable law or agreed to in writing, software
++#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
++#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
++#    License for the specific language governing permissions and limitations
++#    under the License.
++
++import logging
++from mock import Mock
++import sys
++
++from oslo_serialization import jsonutils
++import ryu.ofproto.ofproto_v1_3_parser as parser
++
++from dragonflow.controller.common import constants as const
++from dragonflow.controller.l3_app import L3App
++from dragonflow.db.api_nb import LogicalRouter, LogicalPort, LogicalSwitch
++from dragonflow.db.db_store import DbStore
++from dragonflow.tests import base as tests_base
++
++logger = logging.getLogger()
++logger.level = logging.DEBUG
++stream_handler = logging.StreamHandler(sys.stdout)
++logger.addHandler(stream_handler)
++
++
++class TestL3App(tests_base.BaseTestCase):
++
++    def setUp(self):
++        super(TestL3App, self).setUp()
++        self.db_store = DbStore()
++        self.mock_api = Mock(name="api")
++        self.mock_nb_api = Mock(name="nb_api")
++        self.mock_vswitch_api = Mock(name="vswitch_api")
++
++        mock_datapath = Mock(name="datapath", ofproto_parser=parser)
++        mock_api = Mock(name='api')
++        self.mock_mod_flow = Mock(name='mod_flow')
++        mock_api.get_datapatch.return_value = mock_datapath
++
++        self.app = L3App(self.mock_api, self.db_store,
++                                  self.mock_vswitch_api,
++                                  self.mock_nb_api)
++        self.app.mod_flow = self.mock_mod_flow
++
++        self.ri_port_value = '''
++            {
++                "name": "ri_port",
++                "chassis": "test_chassis",
++                "admin_state": "True",
++                "ips": ["192.168.10.1"],
++                "macs": ["112233445566"],
++                "lswitch": "lswitch1",
++                "topic": "tenant1",
++                "tunnel_key": 1025
++            }
++            '''
++        self.nexthop_port_value = '''
++            {
++                "name": "nexthop_port",
++                "chassis": "test_chassis",
++                "admin_state": "True",
++                "ips": ["192.168.10.254"],
++                "macs": ["112233445577"],
++                "lswitch": "lswitch1",
++                "topic": "tenant1",
++                "tunnel_key": 1024
++            }
++            '''
++
++        self.lswitch1_value = '''
++            {
++                "name": "lswitch1",
++                "subnets": [
++                    {
++                        "topic": "tenant1",
++                        "gateway_ip": "192.168.10.1",
++                        "cidr": "192.168.10.0/24",
++                        "id": "subnet1",
++                        "name": "subnet1"
++                    }
++                ]
++            }
++        '''
++
++        self.router_value = '''
++            {
++                "id": "router1",
++                "topic": "tenant1",
++                "version": "1.0",
++                "ports": [
++                    {
++                        "network": "192.168.10.0/24",
++                        "lswitch": "lswitch1",
++                        "topic": "tenant1",
++                        "id": "ri_port",
++                        "lrouter": "router1",
++                        "mac": "112233445566",
++                        "tunnel_key": 1025
++                    }
++                ]
++            }
++            '''
++        self.router2_value = '''
++            {
++                "id": "router1",
++                "topic": "tenant1",
++                "version": "1.0",
++                "ports": [
++                    {
++                        "network": "192.168.10.0/24",
++                        "lswitch": "lswitch1",
++                        "topic": "tenant1",
++                        "id": "ri_port",
++                        "lrouter": "router1",
++                        "mac": "112233445566",
++                        "tunnel_key": 1025
++                    }
++                ]
++            }
++            '''
++
++        self.route1 = {"destination": "10.100.0.0/16",
++                       "nexthop": "192.168.10.254"}
++
++        self.ri_port = LogicalPort(self.ri_port_value)
++        self.nexthop_port = LogicalPort(self.nexthop_port_value)
++        self.lswitch1 = LogicalSwitch(self.lswitch1_value)
++        self.router1 = LogicalRouter(self.router_value)
++        self.db_store.set_port('ri_port', self.ri_port, False, 'tenant1')
++        self.db_store.set_port('nexthop_port', self.nexthop_port,
++                               False, 'tenant1')
++        self.db_store.set_lswitch('lswitch1', self.lswitch1, 'tenant1')
++
++        router_value = jsonutils.loads(self.router_value)
++        router_value['routes'] = [self.route1]
++        self.router1_with_routes = LogicalRouter(jsonutils.dumps(router_value))
++
++    def test_add_router(self):
++        self.app.router_updated(self.router1)
++        print self.mock_mod_flow.mock_calls
++        assert self.mock_mod_flow.call_count == 2
++        args, kwargs = self.mock_mod_flow.call_args
++        assert kwargs['table_id'] == const.L2_LOOKUP_TABLE
++
++    def test_delete_router(self):
++        self.db_store.update_router("router1", self.router1_with_routes,
++                                    topic='tenant1')
++        self.app.router_deleted('router1')
++        print self.mock_mod_flow.mock_calls
++        assert self.mock_mod_flow.call_count == 3
+diff -ruN -x '*.pyc' /opt/stack/dragonflow/dragonflow/tests/unit/test_l3_proactive_app.py /sdn/code/dragonflow/dragonflow/tests/unit/test_l3_proactive_app.py
+--- /opt/stack/dragonflow/dragonflow/tests/unit/test_l3_proactive_app.py	2016-09-27 11:46:02.711869000 +0800
++++ /sdn/code/dragonflow/dragonflow/tests/unit/test_l3_proactive_app.py	2016-09-27 19:16:16.864243010 +0800
+@@ -17,6 +17,7 @@
+ from mock import Mock
+ import sys
+ 
++from oslo_serialization import jsonutils
+ import ryu.ofproto.ofproto_v1_3_parser as parser
+ 
+ from dragonflow.controller.common import constants as const
+@@ -92,7 +93,7 @@
+ 
+         self.router_value = '''
+             {
+-                "name": "router1",
++                "id": "router1",
+                 "topic": "tenant1",
+                 "version": "1.0",
+                 "ports": [
+@@ -100,7 +101,28 @@
+                         "network": "192.168.10.0/24",
+                         "lswitch": "lswitch1",
+                         "topic": "tenant1",
+-                        "id": "ri_port"
++                        "id": "ri_port",
++                        "lrouter": "router1",
++                        "mac": "112233445566",
++                        "tunnel_key": 1025
++                    }
++                ]
++            }
++            '''
++        self.router2_value = '''
++            {
++                "id": "router1",
++                "topic": "tenant1",
++                "version": "1.0",
++                "ports": [
++                    {
++                        "network": "192.168.10.0/24",
++                        "lswitch": "lswitch1",
++                        "topic": "tenant1",
++                        "id": "ri_port",
++                        "lrouter": "router1",
++                        "mac": "112233445566",
++                        "tunnel_key": 1025
+                     }
+                 ]
+             }
+@@ -118,19 +140,28 @@
+                                False, 'tenant1')
+         self.db_store.set_lswitch('lswitch1', self.lswitch1, 'tenant1')
+ 
+-    def test_add_route(self):
+-        self.app.add_router_route(self.router1, self.route1)
+-        assert self.mock_mod_flow.called
+-        args, kwargs = self.mock_mod_flow.call_args
+-        assert kwargs['cookie'] == 1024
+-        assert kwargs['table_id'] == const.L3_LOOKUP_TABLE
+-        assert len(kwargs['inst']) == 2
+-
+-    def test_del_route(self):
+-        self.test_add_route()
+-        self.app.remove_router_route(self.router1, self.route1)
+-        assert len(self.mock_mod_flow.call_args_list) == 2
++        router_value = jsonutils.loads(self.router_value)
++        router_value['routes'] = [self.route1]
++        self.router1_with_routes = LogicalRouter(jsonutils.dumps(router_value))
++
++    def test_add_router(self):
++        self.app.router_updated(self.router1)
++        assert self.mock_mod_flow.call_count == 3
+         args, kwargs = self.mock_mod_flow.call_args
+-        assert kwargs['table_id'] == const.L3_LOOKUP_TABLE
+-        assert 'out_port' in kwargs
+-        assert 'out_group' in kwargs
++        assert kwargs['table_id'] == const.L2_LOOKUP_TABLE
++
++    def test_update_router_add_route(self):
++        self.db_store.update_router("router1", self.router1, topic='tenant1')
++        self.app.router_updated(self.router1_with_routes)
++        assert self.mock_mod_flow.call_count == 1
++
++    def test_update_router_del_route(self):
++        self.db_store.update_router("router1", self.router1_with_routes, topic='tenant1')
++        self.app.router_updated(self.router1)
++        assert self.mock_mod_flow.call_count == 1
++
++    def test_delete_router(self):
++        self.db_store.update_router("router1", self.router1_with_routes,
++                                    topic='tenant1')
++        self.app.router_deleted('router1')
++        assert self.mock_mod_flow.call_count == 4
+diff -ruN -x '*.pyc' /opt/stack/dragonflow/dragonflow/tests/unit/test_ryu_base_app.py /sdn/code/dragonflow/dragonflow/tests/unit/test_ryu_base_app.py
+--- /opt/stack/dragonflow/dragonflow/tests/unit/test_ryu_base_app.py	2016-07-28 10:11:19.133347000 +0800
++++ /sdn/code/dragonflow/dragonflow/tests/unit/test_ryu_base_app.py	2016-09-27 16:44:35.730393558 +0800
+@@ -40,8 +40,8 @@
+                 'remove_local_port',
+                 'add_remote_port',
+                 'remove_remote_port',
+-                'add_router_port',
+-                'remove_router_port',
++                'router_updated',
++                'router_deleted',
+                 'add_security_group_rule',
+                 'remove_security_group_rule',
+                 'switch_features_handler',
+@@ -62,10 +62,8 @@
+         self.ryu_df_adapter.notify_remove_local_port(lport=4)
+         self.ryu_df_adapter.notify_add_remote_port(lport=5)
+         self.ryu_df_adapter.notify_remove_remote_port(lport=6)
+-        self.ryu_df_adapter.notify_add_router_port(
+-                router=7, router_port=8, local_network_id=9)
+-        self.ryu_df_adapter.notify_remove_router_port(
+-                router_port=10, local_network_id=11)
++        self.ryu_df_adapter.notify_update_router(router=7)
++        self.ryu_df_adapter.notify_delete_router(router_id=8)
+         self.ryu_df_adapter.notify_add_security_group_rule(
+                 secgroup=12, secgroup_rule=13)
+         self.ryu_df_adapter.notify_remove_security_group_rule(
+@@ -77,10 +75,8 @@
+                 mock.call.remove_local_port(lport=4),
+                 mock.call.add_remote_port(lport=5),
+                 mock.call.remove_remote_port(lport=6),
+-                mock.call.add_router_port(
+-                        local_network_id=9, router=7, router_port=8),
+-                mock.call.remove_router_port(
+-                        local_network_id=11, router_port=10),
++                mock.call.router_updated(router=7),
++                mock.call.router_deleted(router_id=8),
+                 mock.call.add_security_group_rule(
+                         secgroup=12, secgroup_rule=13),
+                 mock.call.remove_security_group_rule(
