@@ -1,0 +1,164 @@
+diff -ruN -x '*.pyc' /sdn/code/dragonflow_baseline/dragonflow/controller/df_db_notifier.py ./dragonflow/controller/df_db_notifier.py
+--- /sdn/code/dragonflow_baseline/dragonflow/controller/df_db_notifier.py	2016-10-08 16:26:15.623073000 +0800
++++ ./dragonflow/controller/df_db_notifier.py	2016-10-08 15:35:19.676167235 +0800
+@@ -79,6 +79,13 @@
+         :param lswitch: logical switch that is updated
+         """
+ 
++    def router_created(self, router):
++        """router created hook callback
++
++
++        :param router: logical router that is created
++        """
++
+     def router_updated(self, router):
+         """router updated hook callback
+ 
+diff -ruN -x '*.pyc' /sdn/code/dragonflow_baseline/dragonflow/controller/df_local_controller.py ./dragonflow/controller/df_local_controller.py
+--- /sdn/code/dragonflow_baseline/dragonflow/controller/df_local_controller.py	2016-10-08 16:26:15.623073000 +0800
++++ ./dragonflow/controller/df_local_controller.py	2016-10-08 15:26:47.449702757 +0800
+@@ -351,6 +351,10 @@
+     def bridge_port_updated(self, lport):
+         self.open_flow_app.notify_update_bridge_port(lport)
+ 
++    def router_created(self, lrouter):
++        self.open_flow_app.notify_create_router(lrouter)
++        self.db_store.update_router(lrouter.get_id(), lrouter)
++
+     def router_updated(self, lrouter):
+         self.open_flow_app.notify_update_router(lrouter)
+         self.db_store.update_router(lrouter.get_id(), lrouter)
+diff -ruN -x '*.pyc' /sdn/code/dragonflow_baseline/dragonflow/controller/l3_app.py ./dragonflow/controller/l3_app.py
+--- /sdn/code/dragonflow_baseline/dragonflow/controller/l3_app.py	2016-10-08 16:26:15.627073000 +0800
++++ ./dragonflow/controller/l3_app.py	2016-10-08 15:33:03.871691312 +0800
+@@ -45,6 +45,9 @@
+                                   const.PRIORITY_DEFAULT,
+                                   const.EGRESS_TABLE)
+ 
++    def router_created(self, router):
++        self.router_updated(router)
++
+     def router_updated(self, router):
+         old_lrouter = self.db_store.get_router(router.get_id())
+         if old_lrouter is None:
+diff -ruN -x '*.pyc' /sdn/code/dragonflow_baseline/dragonflow/controller/l3_proactive_app.py ./dragonflow/controller/l3_proactive_app.py
+--- /sdn/code/dragonflow_baseline/dragonflow/controller/l3_proactive_app.py	2016-10-08 16:26:15.627073000 +0800
++++ ./dragonflow/controller/l3_proactive_app.py	2016-10-08 15:34:04.825395833 +0800
+@@ -39,6 +39,9 @@
+                                   const.PRIORITY_DEFAULT,
+                                   const.EGRESS_TABLE)
+ 
++    def router_created(self, router):
++        self.router_updated(router)
++
+     def router_updated(self, router):
+         old_lrouter = self.db_store.get_router(router.get_id())
+         if old_lrouter is None:
+diff -ruN -x '*.pyc' /sdn/code/dragonflow_baseline/dragonflow/controller/ryu_base_app.py ./dragonflow/controller/ryu_base_app.py
+--- /sdn/code/dragonflow_baseline/dragonflow/controller/ryu_base_app.py	2016-10-08 16:26:15.627073000 +0800
++++ ./dragonflow/controller/ryu_base_app.py	2016-10-08 15:31:27.486086208 +0800
+@@ -80,6 +80,9 @@
+     def notify_remove_logical_switch(self, lswitch=None):
+         self.dispatcher.dispatch('remove_logical_switch', lswitch=lswitch)
+ 
++    def notify_create_router(self, router=None):
++        self.dispatcher.dispatch('router_created', router=router)
++
+     def notify_update_router(self, router=None):
+         self.dispatcher.dispatch('router_updated', router=router)
+ 
+diff -ruN -x '*.pyc' /sdn/code/dragonflow_baseline/dragonflow/db/api_nb.py ./dragonflow/db/api_nb.py
+--- /sdn/code/dragonflow_baseline/dragonflow/db/api_nb.py	2016-10-08 16:26:15.631073000 +0800
++++ ./dragonflow/db/api_nb.py	2016-10-08 11:49:58.208776787 +0800
+@@ -216,7 +216,10 @@
+                 lport_id = key
+                 self.controller.logical_port_deleted(lport_id)
+         elif 'lrouter' == table:
+-            if action == 'set' or action == 'create':
++            if action == 'create':
++                lrouter = LogicalRouter(value)
++                self.controller.router_created(lrouter)
++            elif action == 'set':
+                 lrouter = LogicalRouter(value)
+                 self.controller.router_updated(lrouter)
+             elif action == 'delete':
+diff -ruN -x '*.pyc' /sdn/code/dragonflow_baseline/dragonflow/tests/unit/test_l3_app.py ./dragonflow/tests/unit/test_l3_app.py
+--- /sdn/code/dragonflow_baseline/dragonflow/tests/unit/test_l3_app.py	2016-10-08 16:26:15.631073000 +0800
++++ ./dragonflow/tests/unit/test_l3_app.py	2016-10-08 15:46:11.714563001 +0800
+@@ -30,11 +30,9 @@
+ 
+     def test_add_del_router(self):
+         self.controller.router_deleted(self.router.get_id())
+-        #print self.mock_mod_flow.mock_calls
+-        assert self.mock_mod_flow.call_count == 3
++        self.assertEqual(3, self.mock_mod_flow.call_count)
+         self.mock_mod_flow.reset_mock()
+         self.controller.router_updated(self.router)
+-        #print self.mock_mod_flow.mock_calls
+-        assert self.mock_mod_flow.call_count == 2
++        self.assertEqual(2, self.mock_mod_flow.call_count)
+         args, kwargs = self.mock_mod_flow.call_args
+-        assert kwargs['table_id'] == const.L2_LOOKUP_TABLE
++        self.assertEqual(const.L2_LOOKUP_TABLE, kwargs['table_id'])
+diff -ruN -x '*.pyc' /sdn/code/dragonflow_baseline/dragonflow/tests/unit/test_l3_proactive_app.py ./dragonflow/tests/unit/test_l3_proactive_app.py
+--- /sdn/code/dragonflow_baseline/dragonflow/tests/unit/test_l3_proactive_app.py	2016-10-08 16:26:15.635073000 +0800
++++ ./dragonflow/tests/unit/test_l3_proactive_app.py	2016-10-08 15:48:26.850066632 +0800
+@@ -33,14 +33,14 @@
+     def test_add_del_route(self):
+         # delete router
+         self.controller.router_deleted(self.router.get_id())
+-        assert self.mock_mod_flow.call_count == 4
++        self.assertEqual(4, self.mock_mod_flow.call_count)
+ 
+         # add router
+         self.mock_mod_flow.reset_mock()
+         self.controller.router_updated(self.router)
+-        assert self.mock_mod_flow.call_count == 3
++        self.assertEqual(3, self.mock_mod_flow.call_count)
+         args, kwargs = self.mock_mod_flow.call_args
+-        assert kwargs['table_id'] == const.L2_LOOKUP_TABLE
++        self.assertEqual(const.L2_LOOKUP_TABLE, kwargs['table_id'])
+         self.mock_mod_flow.reset_mock()
+ 
+         # add route
+@@ -50,10 +50,10 @@
+         router_with_route.lrouter['routes'] = [route]
+         self.controller.logical_port_created(test_app_base.fake_local_port1)
+         self.controller.router_updated(router_with_route)
+-        assert self.mock_mod_flow.call_count == 2
++        self.assertEqual(2, self.mock_mod_flow.call_count)
+ 
+         # delete route
+         self.mock_mod_flow.reset_mock()
+         self.router.lrouter['routes'] = []
+         self.controller.router_updated(self.router)
+-        assert self.mock_mod_flow.call_count == 1
++        self.assertEqual(1, self.mock_mod_flow.call_count)
+diff -ruN -x '*.pyc' /sdn/code/dragonflow_baseline/dragonflow/tests/unit/test_ryu_base_app.py ./dragonflow/tests/unit/test_ryu_base_app.py
+--- /sdn/code/dragonflow_baseline/dragonflow/tests/unit/test_ryu_base_app.py	2016-10-08 16:26:15.635073000 +0800
++++ ./dragonflow/tests/unit/test_ryu_base_app.py	2016-10-08 15:40:09.205206737 +0800
+@@ -40,6 +40,7 @@
+                 'remove_local_port',
+                 'add_remote_port',
+                 'remove_remote_port',
++                'router_created',
+                 'router_updated',
+                 'router_deleted',
+                 'add_security_group_rule',
+@@ -62,6 +63,7 @@
+         self.ryu_df_adapter.notify_remove_local_port(lport=4)
+         self.ryu_df_adapter.notify_add_remote_port(lport=5)
+         self.ryu_df_adapter.notify_remove_remote_port(lport=6)
++        self.ryu_df_adapter.notify_create_router(router=9)
+         self.ryu_df_adapter.notify_update_router(router=7)
+         self.ryu_df_adapter.notify_delete_router(router=8)
+         self.ryu_df_adapter.notify_add_security_group_rule(
+@@ -75,6 +77,7 @@
+                 mock.call.remove_local_port(lport=4),
+                 mock.call.add_remote_port(lport=5),
+                 mock.call.remove_remote_port(lport=6),
++                mock.call.router_created(router=9),
+                 mock.call.router_updated(router=7),
+                 mock.call.router_deleted(router=8),
+                 mock.call.add_security_group_rule(
