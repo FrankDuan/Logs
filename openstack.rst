@@ -45,6 +45,8 @@ create network
   --disable-dhcp --gateway 203.0.113.1 203.0.113.0/24
 * neutron router-gateway-set --disable-snat router1 ext-net
 
+glance image-create --name "cirros" --file ./cirros-0.3.4-x86_64-disk.img  --disk-format qcow2 --container-format bare --progress
+
 create vm
 ---------------
 nova boot --image cirros-0.3.4-x86_64-uec --flavor 1 --nic net-id=4b12d425-4fe2-47ad-8ffe-a95522d8f12c vm1
