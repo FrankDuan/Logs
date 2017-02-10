@@ -29,6 +29,10 @@ devstack config
 NO_UPDATE_REPOS=True
 RECLONE=no
 
+GIT_BASE=${GIT_BASE:-https://git.openstack.org}
+DEST=/disk_e/stack
+
+
 DATABASE_PASSWORD=stackdb
 RABBIT_PASSWORD=huawei
 SERVICE_PASSWORD=huawei
