@@ -61,6 +61,10 @@ NEUTRON_CREATE_INITIAL_NETWORKS=False
 
 CI devstack config
 ^^^^^^^^^^^^^^^^^^^^
+[[local|localrc]] 
+
+GIT_BASE=${GIT_BASE:-https://git.openstack.org}
+
 * [df]
 
 * remote_db_ip 10.220.2.75
