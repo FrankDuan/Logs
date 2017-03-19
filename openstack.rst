@@ -33,9 +33,9 @@ Frequently used commands
 create network
 ---------------
 
-* neutron net-create net1
+* openstack network create net1
 
-* neutron subnet-create net1 192.168.12.0/24 --name subnet1
+openstack subnet create --network net1 --subnet-range 192.168.12.0/24 subnet1
 * neutron router-create router1
 * neutron router-interface-add router1 subnet1
 * neutron router-update router1 --route destination=10.10.10.0/24,nexthop=192.168.12.254
@@ -49,9 +49,9 @@ glance image-create --name "cirros" --file ./cirros-0.3.4-x86_64-disk.img  --dis
 
 create vm
 ---------------
-nova boot --image cirros-0.3.4-x86_64-uec --flavor 1 --nic net-id=4b12d425-4fe2-47ad-8ffe-a95522d8f12c vm1
+openstack server create --image cirros --flavor 0 --nic net-id=8588c407-fe3c-4f97-af5f-8e772e6193ad vm4
 
-openstack flavor create --public m1.extra_tiny --id auto --ram 256 --disk 0 --vcpus 1 --rxtx-factor 1
+openstack flavor create --public m1.extra_tiny --id 0 --ram 256 --disk 0 --vcpus 1 --rxtx-factor 1
 
 Neutron Inside
 ================
