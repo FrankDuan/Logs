@@ -1,0 +1,60 @@
+/* Meter configuration. OFPT_METER_MOD. */
+struct ofp_meter_mod {
+struct ofp_header header;
+uint16_t command; /* One of OFPMC_*. */
+uint16_t flags; /* Bitmap of OFPMF_* flags. */
+uint32_t meter_id; /* Meter instance. */
+struct ofp_meter_band_header bands[0]; /* The band list length is inferred from the length field
+                                          in the header. */
+};
+
+/* Meter commands */
+enum ofp_meter_mod_command {
+OFPMC_ADD, /* New meter. */
+OFPMC_MODIFY, /* Modify specified meter. */
+OFPMC_DELETE, /* Delete specified meter. */
+};
+
+The OpenFlow switch protocol also defines some additional virtual meters that can not 
+be associated with flows:
+
+enum ofp_meter {
+/* Last usable meter. */
+OFPM_MAX = 0xffff0000,
+/* Virtual meters. */
+OFPM_SLOWPATH = 0xfffffffd, /* Meter for slow datapath. */
+OFPM_CONTROLLER = 0xfffffffe, /* Meter for controller connection. */
+OFPM_ALL = 0xffffffff, /* Represents all meters for stat requests commands. */
+};
+
+/* Meter configuration flags */
+enum ofp_meter_flags {
+OFPMF_KBPS = 1 << 0, /* Rate value in kb/s (kilo-bit per second). */
+OFPMF_PKTPS = 1 << 1, /* Rate value in packet/sec. */
+OFPMF_BURST = 1 << 2, /* Do burst size. */
+OFPMF_STATS = 1 << 3, /* Collect statistics. */
+};
+
+/* Common header for all meter bands */
+struct ofp_meter_band_header {
+uint16_t type; /* One of OFPMBT_*. */
+uint16_t len; /* Length in bytes of this band. */
+uint32_t rate; /* Rate for this band. */
+uint32_t burst_size; /* Size of bursts. */
+};
+
+/* Meter band types */
+enum ofp_meter_band_type {
+OFPMBT_DROP = 1, /* Drop packet. */
+OFPMBT_DSCP_REMARK = 2, /* Remark DSCP in the IP header. */
+OFPMBT_EXPERIMENTER = 0xFFFF /* Experimenter meter band. */
+};
+
+/* OFPMBT_DROP band - drop packets */
+struct ofp_meter_band_drop {
+uint16_t type; /* OFPMBT_DROP. */
+uint16_t len; /* Length in bytes of this band. */
+uint32_t rate; /* Rate for dropping packets. */
+uint32_t burst_size; /* Size of bursts. */
+uint8_t pad[4];
+};
