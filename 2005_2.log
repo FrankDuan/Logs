@@ -1,0 +1,123 @@
+	11月18日 编译windows版本
+修改：
+	hdlc_pub.h由0改为1
+	#define HDLC_MAX_PORT_PER_SUBBRD        (1)
+#define HDLC_SUBBOARD_NUMBER            (1)
+vpdbear_api.h
+typedef unsigned long VOS_UINT64;
+	11月24日 UT
+FileName : Umg_host\VPU\host\vpd_core\vpu_core_api.c 
+Line     : 2746 
+Location : Umg_host\VPU\host\vpd_core\vpu_core_api.c/L2746 
+Symbol   : COREOP_AddCall 
+Comments : 如果add core失败，core不应该被激活 
+
+FileName : Umg_host\VPU\host\chn\chn_func.c 
+Line     : 1712 
+Location : Umg_host\VPU\host\chn\chn_func.c/L1712 
+Symbol   : CHN_CheckFaultTcChn 
+Comments : 是否应该为一次例测修复一个通道，如果没有故障通道，才返回
+
+RM_LoopDspChn第三个参数定义为宏。 
+MTT疑问：
+	打桩时，VOS_Printf的参数不能正确打印。
+11月25日
+
+发送消息需要用VOS_AllocMsg来申请内存。
+消息打印：
+有一个消息打印任务：PID_VPU_MSGPRN负责打印消息。
+对于TC驱动的上行消息，调用函数TCU_MsgDump，该函数将要打印的消息发给消息打印任务，消息打印任务的消息处理函数是MSGPRN_MsgProc，负责接收需要打印的消息并进行打印。
+每次都是消息接收方负责调用TCU_MsgDump。
+
+11月26日
+FileName : Umg_host\VPU\host\cid\cid_api.c 
+Line     : 83 
+Location : Umg_host\VPU\host\cid\cid_api.c/L83 
+Symbol   : CID_PidInit 
+Comments : 函数OM_InitMediaPara()未声明 
+
+FileName : Umg_host\VPU\host\cid\cid_api.c 
+Line     : 274 
+Location : Umg_host\VPU\host\cid\cid_api.c/L274 
+Symbol   : CID_RmAckProc 
+Comments : 不建议使用goto语句
+
+DWA: Display with alerting.(Andisp包)。
+11月28日：
+任务汇总：
+1，	UT报告
+2，	IT环境准备
+3，	TG一级验证
+4，	Mindspeed REVIEW结果报告
+5，	Mindspeed REVIEW问题跟踪
+6，	CID/COCK review 问题报告
+
+MINDSPEED复用帧的处理：
+	发送给DSP复用后的帧长度，如723两帧复用，则为60ms。
+	2005年12月
+	12月9日：CID脚本写作
+测试项：
+	摘机状态下发送CID
+		下发ADD TC消息给MP（带有CID业务类型的IE）
+			MP分配ccb，判断出业务为cid，分配外部时隙。分发消息给CID。
+	CID收到ADD TC 消息，直接应答成功给MP。未分配TC
+			MP应答CMU
+收到MP成功应答。
+		下发SendTone消息给MP
+带ANDISP包的IE，MP根据该IE来判断业务类型。MP调用CID模块的解析函数解析这些IE，保存在CidCB中。发送消息给CID。
+	CID收到放音消息，申请TC通道SRU_CID_REQCHNWT。
+CID收到底层的ADD TC应答。连接时隙。发送SAS+CAS, SRU_CID_ACKWT
+			收到应答。等待结束定时器，应答MP。SRU_CID_SCASEXE
+		MP应答CMU
+收到CAS+SAS播放结束应答。启动等待DTMF应答定时器，等待DTMF “D”应答。SRU_CID_DTMF_REPORT
+			收到DTMF应答
+			发送CID，SRU_CID_ACKWT。
+收到发送CID应答。SRU_CID_CIDEXE。启动等待结束定时器。
+			CID结束应答。CID发送内部停止请求给MP，MP再分发给CID。
+			CID下发停止消息给驱动。
+			驱动应答CID。CID上报完成给MP。
+上报给MP.
+		MP应答CMU完成
+		删除TC。
+	挂机状态下发送CID
+		下发ADD TC消息给MP（带有CID业务类型的IE）
+			MP分配ccb，判断出业务为cid，分配外部时隙。分发消息给CID。
+	CID收到ADD TC 消息，直接应答成功给MP。未分配TC
+			MP应答CMU
+收到MP成功应答。
+		下发SendTone消息给MP
+带ANDISP包的IE，MP根据该IE来判断业务类型。MP调用CID模块的解析函数解析这些IE，保存在CidCB中。发送消息给CID。
+	CID收到放音消息，判断是挂机，发送振铃信号到SPF。同时申请通道。
+		CID收到底层的ADD TC应答。连接时隙。应答MP成功。
+		CID收到SPF应答消息，启动延时定时器。
+		收到定时到消息，下发CID消息。
+		收到CID应答消息，启动等待CID结果定时器。
+		收到CID完成消息。应答成功。
+		删除TC。
+SRU_CID_SERVICE_MWN ？？
+	12月10日：完成脚本，执行测试。
+	12月13日：培训，ITT测试
+问题：
+1．	HOST-HALTC-MSD MODALL消息解析不正确。
+2．	MSD-CHN收到消息后仍旧上报超时？
+原因：CORE的状态没有修改
+	12月26日 Mindspeed遗留问题，ST
+TC资源状态：
+RSC_STATUS_IDLE = 0,		未分配状态 RM_InitTcChnInfo
+    RSC_STATUS_USE,
+    RSC_STATUS_FAULT,
+CB不清除：
+数据结构	原设计	修改方案
+TCCB	启动时清除内容
+分配时清除内容	不变
+CORECB	启动时清除内容
+分配时清除内容	不变
+CCB	启动时清除内容
+释放时清除内容	分配时清除内容
+TOPOCCB	ADD TC/EC/TCEC下行时清除内容
+ADD TC/EC/TCEC失败时清除内容
+DEL TC/EC/TCEC时清除内容	同CCB，在清除CCB时同时清除TOPOCCB
+	
+Mindspeed周例会
+Mindspeed遗留问题清理
+	12月27日 Mindspeed遗留问
