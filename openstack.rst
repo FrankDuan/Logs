@@ -68,7 +68,7 @@ python
 ================
 
 debug python 
-^^^^^^^^^^^^^^^^^^^^
+----------------
 /usr/bin/python -m pdb /usr/local/bin/neutron-server --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini
 
 b /opt/stack/neutron/neutron/api/v2/router.py:74
